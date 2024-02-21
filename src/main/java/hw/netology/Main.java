@@ -12,6 +12,7 @@ public class Main {
     public static final int ROW_NUM = 100_000;
     public static final int SYM_NUM = 10_000;
     public static final String LETTERS = "abc";
+    public static List<Thread> threads = new ArrayList<>();
 
     public static void main(String[] args) throws InterruptedException {
         Thread threadFill = new Thread(() -> {
@@ -30,51 +31,10 @@ public class Main {
 
         threadFill.start();
         System.out.println("Поток наполнения стартовал");
-        List<Thread> threads = new ArrayList<>();
+        queueStart(queue1, "a", "певый");
+        queueStart(queue2, "b", "второй");
+        queueStart(queue3, "c", "третий");
 
-        Thread threadA = new Thread(() -> {
-            String maxRow = null;
-            try {
-                maxRow = maxCountFinder("a", queue1);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.print("Поток А завершился. Макимальная частота: ");
-            System.out.println(maxRow.length() - maxRow.replaceAll("a", "").length());
-            System.out.println("Строка для 'a': " + maxRow);
-        });
-        Thread threadB = new Thread(() -> {
-            String maxRow = null;
-            try {
-                maxRow = maxCountFinder("b", queue2);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.print("Поток В завершился. Макимальная частота: ");
-            System.out.println(maxRow.length() - maxRow.replaceAll("b", "").length());
-            System.out.println("Строка для 'b': " + maxRow);
-        });
-        Thread threadC = new Thread(() -> {
-            String maxRow = null;
-            try {
-                maxRow = maxCountFinder("c", queue3);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            System.out.print("Поток С завершился. Макимальная частота: ");
-            System.out.println(maxRow.length() - maxRow.replaceAll("c", "").length());
-            System.out.println("Строка для 'c': " + maxRow);
-        });
-
-        threadA.start();
-        System.out.println("Поток А стартовал");
-        threadB.start();
-        System.out.println("Поток B стартовал");
-        threadC.start();
-        System.out.println("Поток C стартовал");
-        threads.add(threadA);
-        threads.add(threadB);
-        threads.add(threadC);
         threadFill.join();
         for (Thread thread : threads) {
             thread.join();
@@ -94,7 +54,7 @@ public class Main {
 
 // метод для определения строки с наибольшим кол-вом опр. символа.
 
-    public static String maxCountFinder(String letter, ArrayBlockingQueue queue) throws InterruptedException {
+    public static void maxCountFinder(String letter, ArrayBlockingQueue queue) throws InterruptedException {
         int maxCount = Integer.MIN_VALUE;
         String maxRow = "";
         int count;
@@ -107,6 +67,22 @@ public class Main {
                 maxCount = count;
             }
         }
-        return maxRow;
+        System.out.println("Строка для " + letter + " : " + maxRow);
+        System.out.println("Макcимальная частота: " + maxCount);
+    }
+
+// метод для старта очередей
+
+    public static void queueStart(ArrayBlockingQueue queueNum, String letter, String nameThread) {
+        Thread thread = new Thread(() -> {
+            try {
+                maxCountFinder(letter, queueNum);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        thread.start();
+        System.out.println("Поток " + nameThread + " стартовал");
+        threads.add(thread);
     }
 }
